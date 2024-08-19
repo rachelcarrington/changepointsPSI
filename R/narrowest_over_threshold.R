@@ -118,7 +118,7 @@ narrowest_over_threshold <- function(x, num_rand_samples=1000, random_samples=NU
       lrs <- t(lambda) %*% x[s:e]
       b <- which.max(abs(lrs))
       d <- ifelse(lrs[b] < 0, 1, -1)
-      results_full[interval_index,] <- c(interval_index, s, e, b + s - 1, d, lrs[b], (e - s + 1))
+      results_full[interval_index,] <- c(interval_index, s, e, b + s, d, lrs[b], (e - s + 1))
     } else if ( model == "var" ){
       lrs <- rep(0, n - 1)
       if ( loss == "lrs" ){
