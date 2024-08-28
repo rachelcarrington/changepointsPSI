@@ -97,8 +97,12 @@ calculate_pvals_all <- function(results, h=NULL, N=1, num_pvals=NULL, sigma2=NUL
     }
     
     # Estimate variance of the data, if not given
-    if ( is.null(sigma2) & !(model == "var") ){
-      sigma2 <- mad(x)
+    if ( is.null(sigma2) ){
+      if ( model == "mean" ){
+        sigma2 <- mad(x)
+      } else if ( model == "slope" ){
+        sigma2 <- mad_slope(x)
+      }
     }
     
     # Create vector of p-values
