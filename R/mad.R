@@ -1,4 +1,4 @@
-#' Estimate variance of a vector by median absolute deviation, assuming piecewise linear mean
+#' Estimate variance of a vector by median absolute deviation, assuming piecewise constant mean
 #'
 #' @description Estimate variance of a vector using median absolute deviation, under the assumption that the data 
 #' is generated with a piecewise constant mean plus Gaussian noise.
@@ -23,7 +23,7 @@ mad <- function(x, lag=1){
 }
 
 
-#' Estimate variance of a vector by median absolute deviation, assuming piecewise constant mean
+#' Estimate variance of a vector by median absolute deviation, assuming piecewise linear mean
 #'
 #' @description Estimate variance of a vector using median absolute deviation, under the assumption that the data 
 #' is generated with a piecewise linear mean plus Gaussian noise.
