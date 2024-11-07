@@ -1,3 +1,5 @@
+
+
 #' Narrowest over threshold changepoint algorithm.
 #'
 #' @description
@@ -114,8 +116,9 @@ narrowest_over_threshold <- function(x, num_rand_samples=1000, random_samples=NU
       d <- ifelse(lrs[b] < 0, 1, -1)
       results_full[interval_index,] <- c(interval_index, s, e, b + s - 1, d, lrs[b], (e - s + 1))
     } else if ( model == "slope" ){
-      lambda <- calculate_nu_slope(n, s, e, return_full=FALSE)
-      lrs <- t(lambda) %*% x[s:e]
+#      lambda <- calculate_nu_slope(n, s, e, return_full=FALSE)
+#      lrs <- t(lambda) %*% x[s:e]
+      lrs <- calculate_lrs_slope(x, s, e, return_full=FALSE)
       b <- which.max(abs(lrs))
       d <- ifelse(lrs[b] < 0, 1, -1)
       results_full[interval_index,] <- c(interval_index, s, e, b + s, d, lrs[b], (e - s + 1))
@@ -147,7 +150,7 @@ narrowest_over_threshold <- function(x, num_rand_samples=1000, random_samples=NU
       results_full[interval_index,] <- c(interval_index, s, e, b, d, lrs[b], (e - s + 1))
     }
   }
-  changepoint_candidates <- results_full[abs(results_full[,"lrs"]) > threshold, ]
+  changepoint_candidates <- results_full[abs(results_full[,"lrs"]) > threshold, , drop=FALSE]
   
 
   if ( length(changepoint_candidates) > 0 ){

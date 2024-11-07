@@ -457,20 +457,23 @@ calculate_interval_wbs <- function(x, b, d, s, e, random_samples, nu=NULL, phi_v
 
 
 
-calculate_interval_not <- function(x, b, d, s, e, random_samples, threshold, maxiter, nu=NULL, phi_var=NULL, phi_obs=NULL, h1=NULL, h2=NULL, tau0=NULL, model="mean", C0=NULL,
+calculate_interval_not <- function(x, results, nu=NULL, phi_var=NULL, phi_obs=NULL, h1=NULL, h2=NULL, tau0=NULL, model="mean", C0=NULL,
                                    C0_nu=NULL, icss=FALSE, autocor=FALSE, Sigma=NULL){
   
   # Find values of phi which satisfy the required inequalities so that the NOT (change in mean) algorithm returns given results
+  # nu is necessary if model is mean or slope
+  # Sigma is necessary if there is autocorrelation
   
-  if ( is.null(nu) ){
-    if ( model == "mean" ){
-      stop("nu must be specified if model == \"mean\".")
-    } else if ( model == "slope" ){
-      stop("nu must be specified if model == \"slope\".")
-    }
-  }
-
   n <- length(x)
+  
+  not_results <- results$results
+  random_samples <- results$params$random_samples
+  random_samples <- cbind(1:nrow(random_samples), random_samples, random_samples[,2] - random_samples[,1] + 1)
+  colnames(random_samples) <- c("index", "s", "e", "width")
+  threshold <- results$params$threshold
+  maxiter <- results$params$maxiter
+  b <- not_results$b
+  model <- results$params$model
 
   if ( model == "mean" || model == "slope" ){
     if ( is.null(phi_var) ){
@@ -492,6 +495,10 @@ calculate_interval_not <- function(x, b, d, s, e, random_samples, threshold, max
     tau0 <- b[1]
   }
 
+  if ( model == "slope" & autocor ){
+    Sigma_nu <- Sigma %*% nu
+  }
+
   max_lower_bound <- ifelse(model == "var", 0, -Inf)
   min_upper_bound <- ifelse(model == "var", 1, Inf)
   
@@ -503,13 +510,12 @@ calculate_interval_not <- function(x, b, d, s, e, random_samples, threshold, max
       if ( model == "mean" ){
         cs <- cusum_phi_vec(x, nu, nu2=phi_var, phi_obs=phi_obs, s=random_samples[j,1], e=random_samples[j,2], C0=C0, C0_nu=C0_nu, icss=icss, autocor=autocor, Sigma=Sigma)
       } else if ( model == "slope" ){
-#        lambda <- create_lambda_change_in_slope(n, s=random_samples[j,1], e=random_samples[j,2])
-        lambda <- calculate_nu_slope(n, s=random_samples[j,1], e=random_samples[j,2])
-#        cs <- t(lambda) %*% cbind(x - nu * phi_obs, nu)
         if ( !autocor ){
-          cs <- t(lambda) %*% cbind(x - nu * phi_obs, nu)
+          nuTnu <- calculate_lrs_slope(nu, s=random_samples[j, 1], e=random_samples[j, 2], return_full=FALSE)
+          cs <- cbind(calculate_lrs_slope(x, s=random_samples[j, 1], e=random_samples[j, 2], return_full=FALSE) - nuTnu * phi_obs, nuTnu)
         } else {
-          cs <- t(lambda) %*% cbind(x - Sigma_nu * phi_obs / phi_var, Sigma_nu / phi_var)
+          nuTnu <- calculate_lrs_slope(nu, s=random_samples[j, 1], e=random_samples[j, 2])
+          cs <- cbind(calculate_lrs_slope(x, s=random_samples[j, 1], e=random_samples[j, 2]) - nuTnu * phi_obs / phi_var, nuTnu / phi_var)
         }
       } else if ( model == "var" ){
         cs <- cusum_phi_vec_var(x, tau0, h1, h2, s=random_samples[ind,1], e=random_samples[ind,2], C0=C0, icss=icss)
@@ -523,32 +529,28 @@ calculate_interval_not <- function(x, b, d, s, e, random_samples, threshold, max
     
   } else {
     
-    for ( k in 1:min(length(b), maxiter) ){
+    for ( k in 1:min(nrow(not_results), maxiter) ){
       
       # Remove intervals containing previous changepoint
       # also intervals which are smaller than previous CP-containing changepoint, as we have already checked that these are below the threshold
       if ( k > 1 ){
-        random_samples <- random_samples[!(random_samples[,1] <= b[k - 1] & random_samples[,2] > b[k - 1]), ]
-        random_samples <- random_samples[random_samples[,2] - random_samples[,1] >= e[k - 1] - s[k - 1], ]
+        random_samples <- random_samples[!(random_samples[,"s"] <= not_results[k - 1, "b"] & random_samples[,"e"] > not_results[k - 1, "b"]), , drop=FALSE]
+        random_samples <- random_samples[random_samples[,"width"] >= not_results[k - 1, "width"], , drop=FALSE]
       }
       
       # For narrower intervals, need |C(t)| < threshold for all t in interval
-      widths <- random_samples[,2] - random_samples[,1] + 1
-      cp_width <- e[k] - s[k] + 1
-      smaller_intervals <-random_samples[widths < cp_width,,drop=FALSE]
+      smaller_intervals <- random_samples[random_samples[,"width"] < not_results[k, "width"], , drop=FALSE]
       
       inequalities <- signs <- numeric(0)
       if ( nrow(smaller_intervals) >= 1 ){
         for ( j in 1:nrow(smaller_intervals) ){
-          s1 <- smaller_intervals[j,1]
-          e1 <- smaller_intervals[j,2]
+          s1 <- smaller_intervals[j, "s"]
+          e1 <- smaller_intervals[j, "e"]
           
           if ( model == "mean" ){
             cs <- cusum_phi_vec(x, nu, phi_var, phi_obs, s=s1, e=e1, C0=C0, C0_nu=C0_nu, icss=icss, autocor=autocor, Sigma=Sigma)
           } else if ( model == "slope" ){
-#            lambda <- create_lambda_change_in_slope(n, s=s1, e=e1)
             lambda <- calculate_nu_slope(n, s=s1, e=e1)
-#            cs <- t(lambda) %*% cbind(x - nu * phi_obs, nu)
             if ( !autocor ){
               cs <- t(lambda) %*% cbind(x - nu * phi_obs, nu)
             } else {
@@ -557,7 +559,7 @@ calculate_interval_not <- function(x, b, d, s, e, random_samples, threshold, max
           }  else if ( model == "var" ){
             cs <- cusum_phi_vec_var(x, tau0, h1, h2, s=s1, e=e1, C0=C0, icss=icss)
           }
-          cs <- cs[abs(cs[,2]) > 10^(-10),,drop=FALSE] # if cs[t,2] = 0 then C(t) is constant in phi
+          cs <- cs[abs(cs[,2]) > 10^(-10), , drop=FALSE] # if cs[t,2] = 0 then C(t) is constant in phi
           inequalities <- c(inequalities, (threshold - cs[,1]) / cs[,2], ((-1) * threshold - cs[,1]) / cs[,2])
           signs <- c(signs, ifelse(cs[,2] > 0, -1, 1), ifelse(cs[,2] > 0, 1, -1))
         }
@@ -566,74 +568,79 @@ calculate_interval_not <- function(x, b, d, s, e, random_samples, threshold, max
       }
       
       # For interval containing changepoint, we need |C(t)| < C(b1) for t \neq b1
+      s <- not_results[k, "s"]
+      e <- not_results[k, "e"]
+      b <- not_results[k, "b"]
+      d <- not_results[k, "d"]
+      cs <- matrix(NA, nrow=n, ncol=2)
+
       if ( model == "mean" ){
-        cs <- cusum_phi_vec(x, nu, nu2=phi_var, phi_obs=phi_obs, s=s[k], e=e[k], C0=C0, C0_nu=C0_nu, icss=icss, autocor=autocor, Sigma=Sigma)
+        cs[s:(e-1),] <- cusum_phi_vec(x, nu, nu2=phi_var, phi_obs=phi_obs, s=s, e=e, C0=C0, C0_nu=C0_nu, icss=icss, autocor=autocor, Sigma=Sigma)
       } else if ( model == "slope" ){
-#        lambda <- create_lambda_change_in_slope(n, s=s[k], e=e[k])
-        lambda <- calculate_nu_slope(n, s=s[k], e=e[k])
-#        cs <- rbind(c(NA, NA), t(lambda) %*% cbind(x - nu * phi_obs, nu))
+        lambda <- calculate_nu_slope(n, s=s, e=e)
         if ( !autocor ){
-          cs <- rbind(c(NA, NA), t(lambda) %*% cbind(x - nu * phi_obs, nu))
+          cs[(s+1):(e-1),] <- t(lambda) %*% cbind(x - nu * phi_obs, nu)
         } else {
-          cs <- rbind(c(NA, NA), t(lambda) %*% cbind(x - Sigma_nu * phi_obs / phi_var, Sigma_nu / phi_var))
+          cs[(s+1):(e-1),] <- t(lambda) %*% cbind(x - Sigma_nu * phi_obs / phi_var, Sigma_nu / phi_var)
         }
       }  else if ( model == "var" ){
-        cs <- cusum_phi_vec_var(x, tau0, h1, h2, s=s[k], e=e[k], C0=C0, icss=icss)
+        cs[s:(e-1),] <- cusum_phi_vec_var(x, tau0, h1, h2, s=s, e=e, C0=C0, icss=icss)
       }
       
       # C(b[k]) > (-d1) * threshold
-      if ( abs(cs[b[k] - s[k] + 1, 2]) > 10^(-10) ){ # if denominator is 0, inequality is always satisfied so we can ignore it
-        if ( d[k] == 1 ){
-          inequalities <- (-1) * (threshold + cs[b[k] - s[k] + 1, 1])/cs[b[k] - s[k] + 1, 2]
+      if ( abs(cs[b, 2]) > 10^(-10) ){ # if denominator is 0, inequality is always satisfied so we can ignore it
+        if ( d == 1 ){
+          inequalities <- (-1) * (threshold + cs[b, 1])/cs[b, 2]
         } else {
-          inequalities <- (threshold - cs[b[k] - s[k] + 1, 1])/cs[b[k] - s[k] + 1, 2]
+          inequalities <- (threshold - cs[b, 1])/cs[b, 2]
         }
-        signs <- ifelse(cs[b[k] - s[k] + 1, 2] > 0, -d[k], d[k])
+        signs <- ifelse(cs[b, 2] > 0, -d, d)
         max_lower_bound <- ifelse(sum(signs == 1, na.rm=TRUE) > 0, max(c(max_lower_bound, inequalities[signs == 1]), na.rm=TRUE), max_lower_bound)
         min_upper_bound <- ifelse(sum(signs == -1, na.rm=TRUE) > 0, min(c(min_upper_bound, inequalities[signs == -1]), na.rm=TRUE), min_upper_bound)
       }
       
       # |C(b[k])| > +/- C(t) for t \neq b[k]
-      inequalities <- cbind((cs[,1] - cs[b[k] - s[k] + 1, 1])/(cs[b[k] - s[k] + 1, 2] - cs[,2]), 
-                            (-1)*(cs[,1] + cs[b[k] - s[k] + 1, 1])/(cs[b[k] - s[k] + 1, 2] + cs[,2]))
-      signs <- cbind(ifelse(cs[b[k] - s[k] + 1, 2] - cs[,2] > 0, -d[k], d[k]), ifelse(cs[b[k] - s[k] + 1, 2] + cs[,2] > 0, -d[k], d[k]))
+      inequalities <- cbind((cs[,1] - cs[b, 1])/(cs[b, 2] - cs[,2]), 
+                            (-1)*(cs[,1] + cs[b, 1])/(cs[b, 2] + cs[,2]))
+      signs <- cbind(ifelse(cs[b, 2] - cs[,2] > 0, -d, d), ifelse(cs[b, 2] + cs[,2] > 0, -d, d))
       
       # Remove b[k] since we don't need this (will probably return NaN or Inf otherwise)
-      signs[b[k] - s[k] + 1, ] <- NA
-      signs[abs(cs[,2] - cs[b[k] - s[k] + 1, 2]) <= 10^(-10)] <- NA
-      signs[abs(cs[,2] + cs[b[k] - s[k] + 1, 2]) <= 10^(-10)] <- NA
+      signs[b, ] <- NA
+      signs[abs(cs[,2] - cs[b, 2]) <= 10^(-10)] <- NA
+      signs[abs(cs[,2] + cs[b, 2]) <= 10^(-10)] <- NA
       max_lower_bound <- ifelse(sum(signs == 1, na.rm=TRUE) > 0, max(c(max_lower_bound, inequalities[signs == 1]), na.rm=TRUE), max_lower_bound)
       min_upper_bound <- ifelse(sum(signs == -1, na.rm=TRUE) > 0, min(c(min_upper_bound, inequalities[signs == -1]), na.rm=TRUE), min_upper_bound)
       
       # For intervals of the same width, we need |C(t)| < C_(s,e) (b1) for all t in interval
-      same_intervals <- random_samples[widths == cp_width,,drop=FALSE]
-      same_intervals <- same_intervals[!(same_intervals[,1] == s[k] & same_intervals[,2] == e[k]),,drop=FALSE]
+      same_intervals <- random_samples[random_samples[,"width"] == not_results[k, "width"],,drop=FALSE]
+      same_intervals <- same_intervals[same_intervals[,"index"] != not_results[k, "index"],,drop=FALSE]
+      
       if ( nrow(same_intervals) >= 1 ){
-        for ( j in nrow(same_intervals) ){
+        for ( j in 1:nrow(same_intervals) ){
+          
+          cs2 <- matrix(NA, nrow=n, ncol=2)
           if ( model == "mean" ){
-            cs2 <- cusum_phi_vec(x, nu, phi_var, phi_obs, s=same_intervals[j, 1], e=same_intervals[j, 2], C0=C0, C0_nu=C0_nu, icss=icss, autocor=autocor, Sigma=Sigma)
+            cs2[same_intervals[j, "s"]:(same_intervals[j, "e"] - 1),] <- cusum_phi_vec(x, nu, phi_var, phi_obs, s=same_intervals[j, "s"], e=same_intervals[j, "e"], C0=C0, C0_nu=C0_nu, icss=icss, autocor=autocor, Sigma=Sigma)
           } else if ( model == "slope" ){
-#            lambda <- create_lambda_change_in_slope(n, s=same_intervals[j, 1], e=same_intervals[j, 2])
-            lambda <- calculate_nu_slope(n, s=same_intervals[j, 1], e=same_intervals[j, 2])
-#            cs2 <- t(lambda) %*% cbind(x - nu * phi_obs, nu)
+            lambda <- calculate_nu_slope(n, s=same_intervals[j, "s"], e=same_intervals[j, "e"], return_full=TRUE)
             if ( !autocor ){
-              cs2 <- t(lambda) %*% cbind(x - nu * phi_obs, nu)
+              cs2[(same_intervals[j, "s"] + 1):(same_intervals[j, "e"] - 1),] <- t(lambda) %*% cbind(x - nu * phi_obs, nu)
             } else {
-              cs2 <- t(lambda) %*% cbind(x - Sigma_nu * phi_obs / phi_var, Sigma_nu / phi_var)
+              cs2[(same_intervals[j, "s"] + 1):(same_intervals[j, "e"] - 1),] <- t(lambda) %*% cbind(x - Sigma_nu * phi_obs / phi_var, Sigma_nu / phi_var)
             }
           } else if ( model == "var" ){
-            cs2 <- cusum_phi_vec_var(x, tau0, h1, h2, s=same_intervals[j, 1], e=same_intervals[j, 2], C0=C0, icss=icss)
+            cs2[same_intervals[j, "s"]:(same_intervals[j, "e"] - 1),] <- cusum_phi_vec_var(x, tau0, h1, h2, s=same_intervals[j, "s"], e=same_intervals[j, "e"], C0=C0, icss=icss)
           }
-          cs2 <- cs2[abs(cs2[,2]) >= 10^(-10),,drop=FALSE]
+#          cs2 <- cs2[abs(cs2[,2]) >= 10^(-10),,drop=FALSE]
+          
           if ( nrow(cs2) > 0 ){
-            inequalities <- cbind((cs2[,1] - cs[b[k] - s[k] + 1, 1]) / (cs[b[k] - s[k] + 1, 2] - cs2[,2]), 
-                              (-1)*(cs2[,1] + cs[b[k] - s[k] + 1, 1])/(cs[b[k] - s[k] + 1, 2] + cs2[,2]))
-            signs <- cbind(ifelse(cs[b[k] - s[k] + 1, 2] - cs2[,2] > 0, -d[k], d[k]), ifelse(cs[b[k] - s[k] + 1, 2] + cs2[,2] > 0, -d[k], d[k]))
+            inequalities <- cbind((cs2[,1] - cs[b, 1]) / (cs[b, 2] - cs2[,2]), (-1) * (cs2[,1] + cs[b, 1])/(cs[b, 2] + cs2[,2]))
+            signs <- cbind(ifelse(cs[b, 2] - cs2[,2] > 0, -d, d), ifelse(cs[b, 2] + cs2[,2] > 0, -d, d))
             
             # Remove entries where we have divided by 0
-            signs[abs(cs2[,2] - cs[b[k] - s[k] + 1, 2]) <= 10^(-10), 1] <- NA
-            signs[abs(cs2[,2] + cs[b[k] - s[k] + 1, 2]) <= 10^(-10), 2] <- NA
-            
+            signs[abs(cs2[,2] - cs[b, 2]) <= 10^(-10), 1] <- NA
+            signs[abs(cs2[,2] + cs[b, 2]) <= 10^(-10), 2] <- NA
+              
             max_lower_bound <- ifelse(sum(signs == 1, na.rm=TRUE) > 0, max(c(max_lower_bound, inequalities[signs == 1]), na.rm=TRUE), max_lower_bound)
             min_upper_bound <- ifelse(sum(signs == -1, na.rm=TRUE) > 0, min(c(min_upper_bound, inequalities[signs == -1]), na.rm=TRUE), min_upper_bound)
           }
@@ -643,29 +650,26 @@ calculate_interval_not <- function(x, b, d, s, e, random_samples, threshold, max
     }
     
     # Make sure no more changepoints are detected
-    if ( maxiter > length(b) ){
+    if ( maxiter > nrow(not_results) ){
       
       # Remove intervals containing last changepoint
-      k <- length(b) + 1
-      random_samples <- random_samples[!(random_samples[,1] <= b[k - 1] & random_samples[,2] > b[k - 1]),, drop=FALSE]
+      random_samples <- random_samples[!(random_samples[,"s"] <= b & random_samples[,"e"] > b),, drop=FALSE]
       
       # Check that all remaining intervals are below the threshold
       if ( nrow(random_samples) >= 1 ){
         inequalities <- signs <- numeric(0)
         for ( j in 1:nrow(random_samples) ){  
           if ( model == "mean" ){
-            cs <- cusum_phi_vec(x, nu, nu2=phi_var, phi_obs=phi_obs, s=random_samples[j,1], e=random_samples[j,2], C0=C0, C0_nu=C0_nu, icss=icss, autocor=autocor, Sigma=Sigma)
+            cs <- cusum_phi_vec(x, nu, nu2=phi_var, phi_obs=phi_obs, s=random_samples[j, "s"], e=random_samples[j, "e"], C0=C0, C0_nu=C0_nu, icss=icss, autocor=autocor, Sigma=Sigma)
           } else if ( model == "slope" ){
-#            lambda <- create_lambda_change_in_slope(n, s=random_samples[j, 1], e=random_samples[j, 2])
-            lambda <- calculate_nu_slope(n, s=random_samples[j, 1], e=random_samples[j, 2])
-#            cs <- t(lambda) %*% cbind(x - nu * phi_obs, nu)
+            lambda <- calculate_nu_slope(n, s=random_samples[j, "s"], e=random_samples[j, "e"])
             if ( !autocor ){
               cs <- t(lambda) %*% cbind(x - nu * phi_obs, nu)
             } else {
               cs <- t(lambda) %*% cbind(x - Sigma_nu * phi_obs / phi_var, Sigma_nu / phi_var)
             }
           } else if ( model == "var" ){
-            cs <- cusum_phi_vec_var(x, tau0, h1, h2, s=random_samples[j, 1], e=random_samples[j, 2], C0=C0, icss=icss)
+            cs <- cusum_phi_vec_var(x, tau0, h1, h2, s=random_samples[j, "s"], e=random_samples[j, "e"], C0=C0, icss=icss)
           }
           cs <- cs[abs(cs[,2]) > 10^(-10),,drop=FALSE]
           inequalities <- c(inequalities, (threshold - cs[,1]) / cs[,2], ((-1) * threshold - cs[,1]) / cs[,2])

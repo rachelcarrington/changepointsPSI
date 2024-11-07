@@ -10,6 +10,7 @@
 #' @param nu Vector which defines the test statistic; not required if \code{model == "var"}. See below.
 #' @param nu2 Value of \eqn{||\nu||_2^2} (optional).
 #' @param phi_obs Observed value of the test statistic (optional).
+#' @param phi_var Variance of test statistic (only used if \code{autocor = TRUE}).
 #' @param h1 Left window size; only needed if \code{model = "var"}.
 #' @param h2 Right window size; only needed if \code{model = "var"}.
 #' @param maxiter Maximum number of changepoints to detect.
@@ -47,7 +48,7 @@
 #' nu <- c(rep(0, b[1] - h), rep(1/h, h), rep(-1/h, h), rep(0, length(x) - b[1] - h))
 #' calculate_interval(results, nu=nu)
 #'
-calculate_interval <- function(results, x=NULL, b0=NULL, nu=NULL, nu2=NULL, phi_obs=NULL, h1=NULL, h2=NULL, maxiter=NULL, C0=NULL, C0_nu=NULL, autocor=FALSE, Sigma=NULL ){
+calculate_interval <- function(results, x=NULL, b0=NULL, nu=NULL, nu2=NULL, phi_obs=NULL, phi_var=NULL, h1=NULL, h2=NULL, maxiter=NULL, C0=NULL, C0_nu=NULL, autocor=FALSE, Sigma=NULL ){
   
   if ( is.null(x) ){
     x <- results$x
@@ -71,7 +72,7 @@ calculate_interval <- function(results, x=NULL, b0=NULL, nu=NULL, nu2=NULL, phi_
 
   if ( method == "bs" ){
 
-    interval <- calculate_interval_bs(x, b, d, b0=b0, nu=nu, threshold=threshold, phi_var=nu2, phi_obs=phi_obs, maxiter=maxiter, model=model, h1=h1, h2=h2, C0=C0, 
+    interval <- calculate_interval_bs(x, b, d, b0=b0, nu=nu, threshold=threshold, phi_obs=phi_obs, phi_var=phi_var, maxiter=maxiter, model=model, h1=h1, h2=h2, C0=C0, 
                                       C0_nu=C0_nu, icss=icss, autocor=autocor, Sigma=Sigma)
 
   } else if ( method == "wbs" ){
@@ -79,16 +80,17 @@ calculate_interval <- function(results, x=NULL, b0=NULL, nu=NULL, nu2=NULL, phi_
     s <- results$results$s
     e <- results$results$e
     random_samples <- results$params$random_samples
-    interval <- calculate_interval_wbs(x, b=b, d=d, s=s, e=e, random_samples=random_samples, nu=nu, phi_var=nu2, phi_obs=phi_obs, model=model, maxiter=maxiter, 
+    interval <- calculate_interval_wbs(x, b=b, d=d, s=s, e=e, random_samples=random_samples, nu=nu, phi_obs=phi_obs, phi_var=phi_var, model=model, maxiter=maxiter, 
                                        threshold=threshold, tau0=b0, h1=h1, h2=h2, icss=icss, autocor=autocor, Sigma=Sigma)
     
   } else if ( method=="not" ){
 
-    s <- results$results$s
-    e <- results$results$e
-    random_samples <- results$params$random_samples
-    interval <- calculate_interval_not(x, b=b, d=d, s=s, e=e, random_samples=random_samples, nu=nu, phi_var=nu2, phi_obs=phi_obs, model=model, maxiter=maxiter, 
-                                       threshold=threshold, tau0=b0, h1=h1, h2=h2, icss=icss, autocor=autocor, Sigma=Sigma)
+#    s <- results$results$s
+#    e <- results$results$e
+#    random_samples <- results$params$random_samples
+#    interval <- calculate_interval_not(x, b=b, d=d, s=s, e=e, random_samples=random_samples, nu=nu, phi_var=nu2, phi_obs=phi_obs, model=model, maxiter=maxiter, 
+#                                       threshold=threshold, tau0=b0, h1=h1, h2=h2, icss=icss, autocor=autocor, Sigma=Sigma)
+    interval <- calculate_interval_not(x, results, nu=nu, phi_obs=phi_obs, phi_var=phi_var, tau0=b0, h1=h1, h2=h2, icss=icss, autocor=autocor, Sigma=Sigma)
   
   }
 

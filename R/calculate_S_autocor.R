@@ -89,7 +89,7 @@ calculate_S_autocor <- function(x, Sigma, nu, results, phi_obs=NULL, phi_var=NUL
         n.cp <- maxiter
       }
       
-      interval <- calculate_interval(results_phi, x=x, nu=nu, Sigma=Sigma, phi_obs=phi_obs, maxiter=n.cp, autocor=TRUE)
+      interval <- calculate_interval(results_phi, x=x, nu=nu, Sigma=Sigma, phi_obs=phi_obs, phi_var=phi_var, maxiter=n.cp, autocor=TRUE)
       
       # Check this interval is the next one
       ncps_found <- min(n.cp, sum(!is.na(b2)))
@@ -127,7 +127,7 @@ calculate_S_autocor <- function(x, Sigma, nu, results, phi_obs=NULL, phi_var=NUL
         n.cp <- maxiter
       }
       
-      interval <- calculate_interval(results_phi, x=x, nu=nu, Sigma=Sigma, phi_obs=phi_obs, maxiter=n.cp, autocor=TRUE)
+      interval <- calculate_interval(results_phi, x=x, nu=nu, Sigma=Sigma, phi_obs=phi_obs, phi_var=phi_var, maxiter=n.cp, autocor=TRUE)
       
       # Check this interval is the next one
       ncps_found <- min(n.cp, sum(!is.na(b2)))
@@ -155,7 +155,7 @@ calculate_S_autocor <- function(x, Sigma, nu, results, phi_obs=NULL, phi_var=NUL
   } else {
     
     # Calculate interval s.t. the given values of b & d are obtained
-    interval <- calculate_interval(results, nu=nu, Sigma=Sigma, phi_obs=phi_obs, maxiter=maxiter, autocor=TRUE)
+    interval <- calculate_interval(results, nu=nu, Sigma=Sigma, phi_obs=phi_obs, phi_var=phi_var, maxiter=maxiter, autocor=TRUE)
     if ( length(b) >= 1 ){
       S <- matrix(c(interval, as.matrix(c(b, d))), nrow=1)
       colnames(S) <- c("lower_lim", "upper_lim", paste0("b", 1:length(b)), paste0("d", 1:length(d)))
@@ -175,7 +175,7 @@ calculate_S_autocor <- function(x, Sigma, nu, results, phi_obs=NULL, phi_var=NUL
       b2 <- results_phi$changepoints
       d2 <- results_phi$results$d
       
-      interval <- calculate_interval(results_phi, x=x, nu=nu, Sigma=Sigma, phi_obs=phi_obs, maxiter=maxiter, autocor=TRUE)
+      interval <- calculate_interval(results_phi, x=x, nu=nu, Sigma=Sigma, phi_obs=phi_obs, phi_var=phi_var, maxiter=maxiter, autocor=TRUE)
       
       # Check this interval is the next one
       if ( abs(interval[1] - max(S[,"upper_lim"])) < 10^(-10) ){
@@ -206,7 +206,7 @@ calculate_S_autocor <- function(x, Sigma, nu, results, phi_obs=NULL, phi_var=NUL
       b2 <- results_phi$changepoints
       d2 <- results_phi$results$d
       
-      interval <- calculate_interval(results_phi, x=x, nu=nu, Sigma=Sigma, phi_obs=phi_obs, maxiter=maxiter, autocor=TRUE)
+      interval <- calculate_interval(results_phi, x=x, nu=nu, Sigma=Sigma, phi_obs=phi_obs, phi_var=phi_var, maxiter=maxiter, autocor=TRUE)
       
       # Check this interval is the next one
       if ( abs( interval[2] - min(S[,"lower_lim"]) ) < 10^(-10) ){
