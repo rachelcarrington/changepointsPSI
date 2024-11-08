@@ -43,6 +43,8 @@
 #' x <- c(rnorm(100), rnorm(100, sd=1.5))
 #' find_changepoints(x, "bs", list(threshold=4), "var")
 #'
+#' @export
+#'
 find_changepoints <- function(x, method, params=list(), model="mean"){
 
   stopifnot( method == "bs" || method == "wbs" || method == "not" || method == "pelt" )

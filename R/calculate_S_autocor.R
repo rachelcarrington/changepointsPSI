@@ -29,7 +29,7 @@
 #' n <- 100
 #' x <- arp(n, rho, mu=c(rep(1, n/2), rep(-1, n/2)))
 #' results <- find_changepoints(x, "bs")
-#' b <- resutls$changepoints
+#' b <- results$changepoints
 #' print(b)
 #' h <- 10
 #' nu <- c(rep(0, b[1] - h), rep(1/h, h), rep(-1/h, h), rep(0, length(x) - b[1] - h))
