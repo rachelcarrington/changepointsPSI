@@ -29,6 +29,8 @@
 #' \item \code{P_phi_in_S_orig} Vector containing values of \eqn{Pr(\phi \in S)} for fixed \eqn{\psi = \psi_{obs}}
 #' }
 #'
+#' @importFrom ChangepointInference changepoint_estimates
+#' @importFrom ChangepointInference changepoint_inference
 #' @export
 #'
 #' @examples
@@ -38,7 +40,7 @@
 #'
 l0_segmentation_psi <- function(x, lambda, h, N=1, sigma2=NULL, sig=4, include_original=TRUE, num_pvals=NULL, cp_bound=TRUE, gamma=1){
   
-#  library(ChangepointInference)
+  # Requires package ChangepointInference
   
   n <- length(x)
   
