@@ -5,6 +5,8 @@ Authors@R:
     person("Rachel", "Carrington", , "r.j.carrington@lancaster.ac.uk", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1537-609X"))
 Description: This package contains several functions for detecting changes in mean and variance for univariate data, as well as functions for calculating p-values associated with detected changes.
+Imports:
+    ChangepointInference
 License: `use_mit_license()`
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
