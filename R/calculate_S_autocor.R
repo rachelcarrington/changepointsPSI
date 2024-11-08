@@ -6,7 +6,7 @@
 #'
 #' @param x Vector of data.
 #' @param Sigma Covariance matrix of \code{x}.
-#' @param nu Vector that defines the test statistic, which is \code{\nu^T x}.
+#' @param nu Vector that defines the test statistic, which is \eqn{\nu^T x}.
 #' @param results Output of changepoint algorithm (either \code{binary_segmentation}, \code{wild_binary_segmentation}, or 
 #' \code{narrowest_over_threshold}).
 #' @param phi_obs Observed value of the test statistic \eqn{\nu^T x}; optional.
