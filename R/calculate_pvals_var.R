@@ -11,6 +11,7 @@
 #' sample \eqn{\phi} for importance sampling. Options are \code{"uniform"} (default) or \code{"beta"}. 
 #' @param scaling_parameter Scaling parameter for the sampling distribution, if \code{sampling_distribution = "beta"}. The sampling is
 #' done from \eqn{Beta(h/2k, h/2k)}. Defaults to 1. Ignored if \code{sampling_distribution = "uniform"}.
+#' @param NW Number of random \code{W} values to generate; defaults to 1.
 #' @param cp_bound If \code{TRUE}, then if there is an estimated changepoint within the window that is fixed under the null hypothesis,
 #' this changepoint will be used as the boundary of the window.
 #' @param gamma Value in \code{(0, 1]}. If \code{h = NULL}, then \eqn{h} is taken to be \code{gamma} times the distance between the changepoint

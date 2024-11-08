@@ -12,6 +12,10 @@
 #' @param include_original Logical; whether to include observed value as \eqn{\psi} in place as one of the random samples;
 #' defaults to \code{TRUE}.
 #' @param num_pvals Maximum number of p-values to calculate.
+#' @param cp_bound If \code{TRUE}, then if there is an estimated changepoint within the window that is fixed under the null hypothesis,
+#' this changepoint will be used as the boundary of the window.
+#' @param gamma Value in \code{(0, 1]}. If \code{h = NULL}, then \eqn{h} is taken to be \code{gamma} times the distance between the changepoint
+#' of interest and the estimated changepoints on either side. Ignored if \code{h} specified; defaults to \code{1}.
 #'
 #' @return A list:
 #' \itemize{

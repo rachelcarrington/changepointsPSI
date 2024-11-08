@@ -29,6 +29,8 @@ narrowest_over_threshold(
 \item{model}{Changepoint model: one of \code{"mean"} (change in mean), \code{"slope"} (change in slope), or \code{"var"} (change in variance).}
 
 \item{loss}{Loss function (only if \code{model = "var"}): one of \code{"lrs"}, \code{"cusum"}, or \code{"icss"}. (See below.)}
+
+\item{return_full_results}{If \code{TRUE}, a data frame containing the changepoint candidate for each random interval will be returned with the results.}
 }
 \value{
 A list.

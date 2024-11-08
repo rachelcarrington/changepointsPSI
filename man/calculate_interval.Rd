@@ -11,6 +11,7 @@ calculate_interval(
   nu = NULL,
   nu2 = NULL,
   phi_obs = NULL,
+  phi_var = NULL,
   h1 = NULL,
   h2 = NULL,
   maxiter = NULL,
@@ -33,6 +34,8 @@ If this is not supplied, the first detected changepoint will be used.}
 \item{nu2}{Value of \eqn{||\nu||_2^2} (optional).}
 
 \item{phi_obs}{Observed value of the test statistic (optional).}
+
+\item{phi_var}{Variance of test statistic (only used if \code{autocor = TRUE}).}
 
 \item{h1}{Left window size; only needed if \code{model = "var"}.}
 

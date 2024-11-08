@@ -1,5 +1,3 @@
-
-
 #' Narrowest over threshold changepoint algorithm.
 #'
 #' @description
@@ -12,6 +10,7 @@
 #' @param maxiter Maximum number of changepoints to return: defaults to \code{n - 1} (or \code{n - 2} if \code{model = "slope"}.
 #' @param model Changepoint model: one of \code{"mean"} (change in mean), \code{"slope"} (change in slope), or \code{"var"} (change in variance).
 #' @param loss Loss function (only if \code{model = "var"}): one of \code{"lrs"}, \code{"cusum"}, or \code{"icss"}. (See below.)
+#' @param return_full_results If \code{TRUE}, a data frame containing the changepoint candidate for each random interval will be returned with the results.
 #'
 #' @return A list.
 #' \itemize{

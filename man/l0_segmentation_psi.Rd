@@ -34,6 +34,12 @@ l0_segmentation_psi(
 defaults to \code{TRUE}.}
 
 \item{num_pvals}{Maximum number of p-values to calculate.}
+
+\item{cp_bound}{If \code{TRUE}, then if there is an estimated changepoint within the window that is fixed under the null hypothesis,
+this changepoint will be used as the boundary of the window.}
+
+\item{gamma}{Value in \code{(0, 1]}. If \code{h = NULL}, then \eqn{h} is taken to be \code{gamma} times the distance between the changepoint
+of interest and the estimated changepoints on either side. Ignored if \code{h} specified; defaults to \code{1}.}
 }
 \value{
 A list:

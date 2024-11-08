@@ -35,6 +35,8 @@ sample \eqn{\phi} for importance sampling. Options are \code{"uniform"} (default
 \item{scaling_parameter}{Scaling parameter for the sampling distribution, if \code{sampling_distribution = "beta"}. The sampling is
 done from \eqn{Beta(h/2k, h/2k)}. Defaults to 1. Ignored if \code{sampling_distribution = "uniform"}.}
 
+\item{NW}{Number of random \code{W} values to generate; defaults to 1.}
+
 \item{cp_bound}{If \code{TRUE}, then if there is an estimated changepoint within the window that is fixed under the null hypothesis,
 this changepoint will be used as the boundary of the window.}
 

@@ -20,7 +20,7 @@ calculate_S_autocor(
 
 \item{Sigma}{Covariance matrix of \code{x}.}
 
-\item{nu}{Vector that defines the test statistic, which is \code{\nu^T x}.}
+\item{nu}{Vector that defines the test statistic, which is \eqn{\nu^T x}.}
 
 \item{results}{Output of changepoint algorithm (either \code{binary_segmentation}, \code{wild_binary_segmentation}, or
 \code{narrowest_over_threshold}).}
