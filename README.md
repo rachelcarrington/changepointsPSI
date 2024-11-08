@@ -10,6 +10,12 @@ To install this package:
 devtools::install_github("rachelcarrington/changepointsPSI")
 ```
 
+Inference for the change in variance model requires the package `DirichletReg`
+```
+install.packages("DirichletReg")
+```
+
+
 To use L0 inference, you will also need to install the package `ChangepointInference` (see https://github.com/jewellsean/ChangepointInference):
 ```
 devtools::install_github("jewellsean/ChangepointInference")
