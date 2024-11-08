@@ -297,6 +297,10 @@ calculate_interval_wbs <- function(x, b, d, s, e, random_samples, nu=NULL, phi_v
     }
   }
 
+  if ( model == "slope" & autocor ){
+    Sigma_nu <- Sigma %*% nu
+  }
+
   max_lower_bound <- ifelse(model == "var", 0, -Inf)
   min_upper_bound <- ifelse(model == "var", 1, Inf)
   
@@ -518,7 +522,7 @@ calculate_interval_not <- function(x, results, nu=NULL, phi_var=NULL, phi_obs=NU
           cs <- cbind(calculate_lrs_slope(x, s=random_samples[j, 1], e=random_samples[j, 2]) - nuTnu * phi_obs / phi_var, nuTnu / phi_var)
         }
       } else if ( model == "var" ){
-        cs <- cusum_phi_vec_var(x, tau0, h1, h2, s=random_samples[ind,1], e=random_samples[ind,2], C0=C0, icss=icss)
+        cs <- cusum_phi_vec_var(x, tau0, h1, h2, s=random_samples[j, 1], e=random_samples[j, 2], C0=C0, icss=icss)
       }
       cs <- cs[abs(cs[,2]) > 10^(-10),,drop=FALSE]
       inequalities <- c((threshold - cs[,1])/cs[,2], ((-1) * threshold - cs[,1])/cs[,2])
