@@ -10,6 +10,11 @@ plot_changepoints(results, return_mu = FALSE, use_ggplot = FALSE, tvals = NULL)
 \item{results}{Output of \code{find_changepoints} applied to a vector of data.}
 
 \item{return_mu}{Whether to return estimates of the trend; defaults to \code{FALSE}.}
+
+\item{use_ggplot}{If \code{TRUE}, creates a plot using \code{ggplot2} package; if \code{FALSE},
+the plot will be created using R's \code{plot} function.}
+
+\item{tvals}{Vector of values to plot on the x-axis.}
 }
 \value{
 If \code{return_mu = TRUE}, vector of estimated parameters (mean, slope, or variance) for each changepoint segment.

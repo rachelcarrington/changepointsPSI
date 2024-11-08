@@ -2,6 +2,9 @@
 #'
 #' @param results Output of \code{find_changepoints} applied to a vector of data.
 #' @param return_mu Whether to return estimates of the trend; defaults to \code{FALSE}.
+#' @param use_ggplot If \code{TRUE}, creates a plot using \code{ggplot2} package; if \code{FALSE},
+#' the plot will be created using R's \code{plot} function.
+#' @param tvals Vector of values to plot on the x-axis.
 #'
 #' @return If \code{return_mu = TRUE}, vector of estimated parameters (mean, slope, or variance) for each changepoint segment.
 #' 
@@ -29,8 +32,8 @@ plot_changepoints <- function(results, return_mu=FALSE, use_ggplot=FALSE, tvals=
   if ( model == "mean" ){
     
     if ( use_ggplot ){
-      g <- ggplot(data.frame(t=tvals, x=x)) + geom_point(aes(x=t, y=x)) + 
-        theme_classic() + labs(x="t", y="X")
+      g <- ggplot2::ggplot(data.frame(t=tvals, x=x)) + ggplot2::geom_point(aes(x=t, y=x)) + 
+        ggplot2::theme_classic() + ggplot2::labs(x="t", y="X")
     } else {
       plot(tvals, x, xlab="t", ylab="X", pch=16)
     }
@@ -39,7 +42,7 @@ plot_changepoints <- function(results, return_mu=FALSE, use_ggplot=FALSE, tvals=
       mu_vals <- mean(x)
       mu_hat <- rep(mu_vals, n)
       if ( use_ggplot ){
-        g <- g + geom_segment(x=tvals[1], xend=tvals[n], y=mu_vals, yend=mu_vals, colour="red")
+        g <- g + ggplot2::geom_segment(x=tvals[1], xend=tvals[n], y=mu_vals, yend=mu_vals, colour="red")
       } else {
         lines(c(tvals[1], tvals[n]), c(mu_vals, mu_vals), col="red")
       }
@@ -48,7 +51,7 @@ plot_changepoints <- function(results, return_mu=FALSE, use_ggplot=FALSE, tvals=
       mu_hat <- rep(NA, n)
       mu_hat[1:b[1]] <- mu_vals[1] <- mean(x[1:b[1]])
       if ( use_ggplot ){
-        g <- g + geom_segment(x=tvals[1], xend=tvals[b[1]], y=mu_vals[1], yend=mu_vals[1], colour="red")
+        g <- g + ggplot2::geom_segment(x=tvals[1], xend=tvals[b[1]], y=mu_vals[1], yend=mu_vals[1], colour="red")
       } else {
         lines(c(tvals[1], tvals[b[1]]), c(mu_vals[1], mu_vals[1]), col="red")
       }
@@ -56,7 +59,7 @@ plot_changepoints <- function(results, return_mu=FALSE, use_ggplot=FALSE, tvals=
         for ( i in 2:length(b) ){
           mu_hat[(b[i - 1] + 1):b[i]] <- mu_vals[i] <- mean(x[(b[i - 1] + 1):b[i]])
           if ( use_ggplot ){
-            g <- g + geom_segment(x=tvals[b[i - 1]], xend=tvals[b[i]], y=mu_vals[i], yend=mu_vals[i], colour="red")
+            g <- g + ggplot2::geom_segment(x=tvals[b[i - 1]], xend=tvals[b[i]], y=mu_vals[i], yend=mu_vals[i], colour="red")
           } else {
             lines(c(tvals[b[i - 1]], tvals[b[i]]), c(mu_vals[i], mu_vals[i]), col="red")
           }
@@ -64,13 +67,13 @@ plot_changepoints <- function(results, return_mu=FALSE, use_ggplot=FALSE, tvals=
       }
       mu_hat[(b[length(b)] + 1):n] <- mu_vals[length(b) + 1] <- mean(x[(b[length(b)] + 1):n])
       if ( use_ggplot ){
-        g <- g + geom_segment(x=tvals[b[length(b)]], xend=tvals[n], y=mu_vals[length(b) + 1], yend=mu_vals[length(b) + 1], colour="red")
+        g <- g + ggplot2::geom_segment(x=tvals[b[length(b)]], xend=tvals[n], y=mu_vals[length(b) + 1], yend=mu_vals[length(b) + 1], colour="red")
       } else {
         lines(c(tvals[b[length(b)]], tvals[n]), c(mu_vals[length(b) + 1], mu_vals[length(b) + 1]), col="red")
       }
     }
     if ( use_ggplot ){
-      g <- g + geom_vline(xintercept=results$changepoints, colour="blue", linetype="dashed")
+      g <- g + ggplot2::geom_vline(xintercept=results$changepoints, colour="blue", linetype="dashed")
     } else {
       abline(v=results$changepoints, col="blue", lty=2)
     }
@@ -103,10 +106,11 @@ plot_changepoints <- function(results, return_mu=FALSE, use_ggplot=FALSE, tvals=
       mu_hat[(b[i-1] + 1):n] <- mu_hat[(b[i-1] + 1):n] + theta_hat[i + 1] * (1:(n - b[i-1]))
     }
     if ( use_ggplot ){
-      g <- ggplot(data.frame(t=tvals, x=x, mu=mu_hat)) + geom_point(aes(x=t, y=x)) + 
-           geom_line(aes(x=t, y=mu), colour="red") +
-           geom_vline(xintercept=results$changepoints, col="blue", linetype="dashed") +
-           theme_classic() + labs(x="t", y="X")
+      g <- ggplot2::ggplot(data.frame(t=tvals, x=x, mu=mu_hat)) + 
+           ggplot2::geom_point(aes(x=t, y=x)) + 
+           ggplot2::geom_line(aes(x=t, y=mu), colour="red") +
+           ggplot2::geom_vline(xintercept=results$changepoints, col="blue", linetype="dashed") +
+           ggplot2::theme_classic() + ggplot2::labs(x="t", y="X")
     } else {
       plot(tvals, x, xlab="t", ylab="X")
       lines(tvals, mu_hat, col="red")
