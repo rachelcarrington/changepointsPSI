@@ -58,35 +58,10 @@ calculate_nu_slope <- function(n, s=1, e=n, tau=NULL, return_full=TRUE){
 calculate_lrs_slope <- function(x, s=1, e=length(x), output="nuTx", return_full=TRUE){
   
   l <- e - s + 1
+  n <- length(x)
   
   x_sums <- c(rep(0, s - 1), cumsum(x[s:e]))
   xt_sums <- c(rep(0, s - 1), cumsum((s:e) * x[s:e]))
-  
-#  a <- b <- coef_lower <- coef_upper <- cst_lower <- cst_upper <- rep(NA, length(x))
-#  for ( tau in (s + 1):(e - 1) ){
-#    a[tau] <- 1/sqrt(1/6 * (e - s + 1) * ((e - s + 1)^2 - 1) * (1 + (e - tau + 1) * (tau - s + 1) + (e - tau) * (tau - s)))
-#    b[tau] <- sqrt((e - tau + 1) * (e - tau) / ((tau - s) * (tau - s + 1)))
-#    coef_lower[tau] <- a[tau] * b[tau] * (3 * (tau - s + 1) + (e - tau) - 1)
-#    cst_lower[tau] <- (-1) * a[tau] * b[tau] * (tau * (e - s) + 2 * s * (tau - s + 1))
-#    coef_upper[tau] <- (-1) * a[tau] / b[tau] * (3 * (e - tau) + (tau - s + 1) + 1)
-#    cst_upper[tau] <- a[tau] / b[tau] * (tau * (e - s) + 2 * e * (e - tau + 1))
-#  }
-
-# goes s to e, should go s + 1 to e + 1
-#  a <- 1/sqrt(1/6 * l * (l^2 - 1) * (1 + (e - (s:e) + 1) * ((s:e) - s + 1) + ((e - s):0) * (0:(e - s))))
-#  b <- sqrt( ((e - s + 1):1) * ((e - s):0) / ((0:(e - s)) * (1:(e - s + 1))) )
-#  coef_lower <- a * b * (3 * (1:(e - s + 1)) + ((e - s):0) - 1)
-#  cst_lower <- (-1) * a * b * ((s:e) * (e - s) + 2 * s * (1:(e - s + 1)))
-#  coef_upper <- (-1) * a / b * (3 * ((e - s):0) + (1:(e - s + 1)) + 1)
-#  cst_upper <- a / b * ((s:e) * (e - s) + 2 * e * ((e - s + 1):1))
-
-# correct, but slightly awkward
-#  a <- 1/sqrt(1/6 * l * (l^2 - 1) * (1 + ((e - s):2) * (2:(e - s)) + ((e - s - 1):1) * (1:(e - s - 1))))
-#  b <- sqrt( ((e - s):2) * ((e - s - 1):1) / ((1:(e - s - 1)) * (2:(e - s))) )
-#  coef_lower <- a * b * (3 * (2:(e - s)) + ((e - s - 1):1) - 1)
-#  cst_lower <- (-1) * a * b * (((s + 1):(e - 1)) * (e - s) + 2 * s * (2:(e - s)))
-#  coef_upper <- (-1) * a / b * (3 * ((e - s - 1):1) + (2:(e - s)) + 1)
-#  cst_upper <- a / b * (((s + 1):(e - 1)) * (e - s) + 2 * e * ((e - s):2))
 
   vals <- 1:(e - s - 1)
 #  coef_lower <- coef_upper <- cst_lower <- cst_upper <- rep(NA, length(x))
@@ -98,13 +73,8 @@ calculate_lrs_slope <- function(x, s=1, e=length(x), output="nuTx", return_full=
   cst_upper <- a / b * ((vals + s) * (e - s) + 2 * e * rev(vals + 1))
   
   if ( output == "nuTx" ){
-    nuTx <- rep(NA, length(x))
+    nuTx <- rep(NA, n)
     nuTx[(s + 1):(e - 1)] <- coef_lower * xt_sums[(s + 1):(e - 1)] + coef_upper * (xt_sums[e] - xt_sums[(s + 1):(e - 1)]) + cst_lower * x_sums[(s + 1):(e - 1)] + cst_upper * (x_sums[e] - x_sums[(s + 1):(e - 1)])
-    
-#    nuTx <- rep(NA, length(x))
-#    for ( tau in (s + 1):(e - 1) ){
-#      nuTx[tau] <- coef_lower[tau] * xt_sums[tau] + coef_upper[tau] * (xt_sums[e] - xt_sums[tau]) + cst_lower[tau] * x_sums[tau] + cst_upper[tau] * (x_sums[e] - x_sums[tau])
-#    }
     
     if ( !return_full ){
       nuTx <- nuTx[!is.na(nuTx)]
@@ -113,7 +83,7 @@ calculate_lrs_slope <- function(x, s=1, e=length(x), output="nuTx", return_full=
     return(nuTx)
     
    } else if ( output == "nu" ){
-    # this bit is definitely wrong!
+    # this needs correcting
     nu <- matrix(NA, nrow=n, ncol=n)
     for ( tau in (s + 1):(e - 1) ){
       nu[s:tau, tau] <- coef_lower[s:tau] * (s:tau) + cst_lower[s:tau]
