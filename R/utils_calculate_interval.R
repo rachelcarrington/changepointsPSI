@@ -100,8 +100,8 @@ calculate_interval_bs <- function(x, b, d, b0=NULL, nu=NULL, model="mean", phi_v
     z <- abs(cs[,2]) > 10^(-10)
     inequalities <- c((threshold - cs[z, 1]) / cs[z, 2], ((-1) * threshold - cs[z, 1]) / cs[z, 2])
     signs <- c(ifelse(cs[z, 2] > 0, -1, 1), ifelse(cs[z, 2] > 0, 1, -1))
-    max_lower_bound <- max(inequalities[signs == 1])
-    min_upper_bound <- min(inequalities[signs == -1])
+    max_lower_bound <- suppressWarnings(max(inequalities[signs == 1]))
+    min_upper_bound <- suppressWarnings(min(inequalities[signs == -1]))
 
   } else {
 
