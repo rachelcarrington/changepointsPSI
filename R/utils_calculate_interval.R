@@ -28,12 +28,6 @@ calculate_interval_bs <- function(x, b, d, b0=NULL, nu=NULL, model="mean", phi_v
     }
   }
   
-  # Autocorrelation can only be used if the model is mean (need to change this to also include slope)
-#  if ( autocor & !(model == "mean") ){
-#    warning("Ignoring autocorrelation.")
-#    autocor <- FALSE
-#  }
-
   n <- length(x)
 
   # Set maximum number of iterations
