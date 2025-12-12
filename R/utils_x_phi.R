@@ -27,7 +27,7 @@ calculate_x_phi_var <- function(x, b0, phi, phi_obs, h1, h2){
 }
 
 
-calculate_x_phi_autocor <- function( x, nu, phi, Sigma, phi_obs=NULL, nu2=NULL ){
+calculate_x_phi_autocor <- function( x, nu, phi, Sigma, Sigma_nu=NULL, phi_obs=NULL, nu2=NULL ){
 
   if ( is.null(phi_obs) ){
     phi_obs <- c(t(nu) %*% x)
@@ -35,8 +35,11 @@ calculate_x_phi_autocor <- function( x, nu, phi, Sigma, phi_obs=NULL, nu2=NULL )
   if ( is.null(nu2) ){
     nu2 <- c(t(nu) %*% Sigma %*% nu)
   }
+  if ( is.null(Sigma_nu) ){
+    Sigma_nu <- Sigma %*% nu
+  }
   
-  x2 <- x + (phi - phi_obs) / nu2 * (Sigma %*% nu)
+  x2 <- x + (phi - phi_obs) / nu2 * Sigma_nu
 
   return(x2)
 
