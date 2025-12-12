@@ -1,4 +1,3 @@
-#create_lambda_change_in_slope <- function(n, s=1, e=n, tau=NULL, return_full=TRUE){
 calculate_nu_slope <- function(n, s=1, e=n, tau=NULL, return_full=TRUE){
   
   # Calculates \nu_\tau for each possible \tau in an interval (s,e)
@@ -64,7 +63,6 @@ calculate_lrs_slope <- function(x, s=1, e=length(x), output="nuTx", return_full=
   xt_sums <- c(rep(0, s - 1), cumsum((s:e) * x[s:e]))
 
   vals <- 1:(e - s - 1)
-#  coef_lower <- coef_upper <- cst_lower <- cst_upper <- rep(NA, length(x))
   a <- 1/sqrt( 1/6 * l * (l^2 - 1) * (1 + rev(vals + 1) * (vals + 1) + rev(vals) * vals) )
   b <- sqrt( rev(vals + 1) * rev(vals) / (vals * (vals + 1)) )
   coef_lower<- a * b * (3 * (vals + 1) + rev(vals) - 1)
